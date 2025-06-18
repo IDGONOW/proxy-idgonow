@@ -10,19 +10,31 @@ const upload = multer();
 app.use(cors());
 app.use(express.json());
 
-// 🔄 Ruta para crear tarjeta profesional
-app.post("/crear-tarjeta", upload.any(), async (req, res) => {
+// Crear tarjeta
+app.post("/crear-tarjeta", upload.fields([
+  { name: "Foto_perfil", maxCount: 1 },
+  { name: "Logo_empresa", maxCount: 1 }
+]), async (req, res) => {
   try {
     const form = new FormData();
 
-    for (const key in req.body) {
-      form.append(key, req.body[key]);
+    // Campos de texto
+    Object.entries(req.body).forEach(([key, value]) => {
+      form.append(key, value);
+    });
+
+    // Archivos adjuntos
+    if (req.files?.Foto_perfil?.[0]) {
+      form.append("Foto_perfil", req.files.Foto_perfil[0].buffer, {
+        filename: req.files.Foto_perfil[0].originalname,
+        contentType: req.files.Foto_perfil[0].mimetype
+      });
     }
 
-    for (const file of req.files) {
-      form.append(file.fieldname, file.buffer, {
-        filename: file.originalname,
-        contentType: file.mimetype,
+    if (req.files?.Logo_empresa?.[0]) {
+      form.append("Logo_empresa", req.files.Logo_empresa[0].buffer, {
+        filename: req.files.Logo_empresa[0].originalname,
+        contentType: req.files.Logo_empresa[0].mimetype
       });
     }
 
@@ -46,7 +58,7 @@ app.post("/crear-tarjeta", upload.any(), async (req, res) => {
   }
 });
 
-// 📄 Ruta para leer tarjeta por ID
+// Leer tarjeta por ID
 app.get("/leer-tarjeta", async (req, res) => {
   const id = req.query.id;
   if (!id) {
@@ -70,11 +82,9 @@ app.get("/leer-tarjeta", async (req, res) => {
   }
 });
 
-// 🚀 Lanzar servidor
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-  console.log(`✅ Proxy escuchando en http://localhost:${PORT}`);
+  console.log(`✅ Proxy escuchando en puerto ${PORT}`);
 });
-
 
 
