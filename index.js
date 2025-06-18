@@ -18,12 +18,10 @@ app.post("/crear-tarjeta", upload.fields([
   try {
     const form = new FormData();
 
-    // Campos de texto
     Object.entries(req.body).forEach(([key, value]) => {
       form.append(key, value);
     });
 
-    // Archivos adjuntos
     if (req.files?.Foto_perfil?.[0]) {
       form.append("Foto_perfil", req.files.Foto_perfil[0].buffer, {
         filename: req.files.Foto_perfil[0].originalname,
@@ -58,22 +56,21 @@ app.post("/crear-tarjeta", upload.fields([
   }
 });
 
-// Leer tarjeta por ID
+// Leer tarjeta
 app.get("/leer-tarjeta", async (req, res) => {
   const id = req.query.id;
-  if (!id) {
-    return res.status(400).json({ error: "ID no proporcionado" });
-  }
+  if (!id) return res.status(400).json({ error: "ID no proporcionado" });
 
   try {
     const response = await fetch(
       `https://idgonow.up.railway.app/api/v1/db/data/v1/pg9x94vtxgric6p/tarjetas_presentacion/${id}`,
       {
         headers: {
-          "xc-token": "HzyX5A2ycuqlDhV2uyiQ-12UhN_DM0uO4Bfxe7hy",
-        },
+          "xc-token": "HzyX5A2ycuqlDhV2uyiQ-12UhN_DM0uO4Bfxe7hy"
+        }
       }
     );
+
     const result = await response.json();
     res.status(response.status).json(result);
   } catch (err) {
@@ -84,7 +81,5 @@ app.get("/leer-tarjeta", async (req, res) => {
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-  console.log(`✅ Proxy escuchando en puerto ${PORT}`);
+  console.log(`✅ Proxy activo en puerto ${PORT}`);
 });
-
-
