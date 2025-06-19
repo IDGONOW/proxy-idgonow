@@ -11,14 +11,18 @@ const upload = multer();
 
 app.post("/crear-tarjeta", upload.any(), async (req, res) => {
   try {
+    // 🔍 Ver qué recibe el proxy desde el formulario
+    console.log("📝 Campos recibidos:", req.body);
+    console.log("📎 Archivos recibidos:", req.files);
+
     const form = new FormData();
 
-    // Recolectar todos los campos de texto
+    // Adjuntar campos de texto al nuevo form
     for (const field in req.body) {
       form.append(field, req.body[field]);
     }
 
-    // Recolectar todos los archivos enviados
+    // Adjuntar archivos al nuevo form
     for (const file of req.files) {
       form.append(file.fieldname, file.buffer, {
         filename: file.originalname,
@@ -40,6 +44,7 @@ app.post("/crear-tarjeta", upload.any(), async (req, res) => {
     );
 
     const result = await response.json();
+    console.log("✅ Respuesta de NocoDB:", result);
     res.status(response.status).json(result);
   } catch (err) {
     console.error("❌ Error en proxy crear-tarjeta:", err);
