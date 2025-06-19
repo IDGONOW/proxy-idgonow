@@ -1,71 +1,52 @@
 const express = require("express");
 const multer = require("multer");
+const FormData = require("form-data");
 const fetch = require("node-fetch");
 const cors = require("cors");
-const FormData = require("form-data");
 
 const app = express();
-const upload = multer();
-
 app.use(cors());
 
-// Crear tarjeta
-app.post("/crear-tarjeta", upload.fields([
-  { name: "Foto_perfil", maxCount: 1 },
-  { name: "Logo_empresa", maxCount: 1 }
-]), async (req, res) => {
+const upload = multer();
+
+app.post("/crear-tarjeta", upload.any(), async (req, res) => {
   try {
     const form = new FormData();
 
-    // Agrega campos de texto manualmente
-    const camposTexto = [
-      "tipo_ficha", "Nombre", "Apellido", "Empresa", "Cargo",
-      "Telefono", "Email", "Url_linkedin", "url_web",
-      "Facebook", "Instagram"
-    ];
+    // Recolectar todos los campos de texto
+    for (const field in req.body) {
+      form.append(field, req.body[field]);
+    }
 
-    camposTexto.forEach(key => {
-      if (req.body[key]) {
-        form.append(key, req.body[key]);
-      }
-    });
-
-    // Adjunta archivos si existen
-    if (req.files?.Foto_perfil?.[0]) {
-      form.append("Foto_perfil", req.files.Foto_perfil[0].buffer, {
-        filename: req.files.Foto_perfil[0].originalname,
-        contentType: req.files.Foto_perfil[0].mimetype
+    // Recolectar todos los archivos enviados
+    for (const file of req.files) {
+      form.append(file.fieldname, file.buffer, {
+        filename: file.originalname,
+        contentType: file.mimetype,
       });
     }
 
-    if (req.files?.Logo_empresa?.[0]) {
-      form.append("Logo_empresa", req.files.Logo_empresa[0].buffer, {
-        filename: req.files.Logo_empresa[0].originalname,
-        contentType: req.files.Logo_empresa[0].mimetype
-      });
-    }
-
+    // Enviar a NocoDB
     const response = await fetch(
       "https://idgonow.up.railway.app/api/v1/db/data/v1/pg9x94vtxgric6p/tarjetas_presentacion",
       {
         method: "POST",
         headers: {
           "xc-token": "HzyX5A2ycuqlDhV2uyiQ-12UhN_DM0uO4Bfxe7hy",
-          ...form.getHeaders()
+          ...form.getHeaders(),
         },
-        body: form
+        body: form,
       }
     );
 
     const result = await response.json();
     res.status(response.status).json(result);
   } catch (err) {
-    console.error("❌ Error al crear tarjeta:", err);
+    console.error("❌ Error en proxy crear-tarjeta:", err);
     res.status(500).json({ error: err.message });
   }
 });
 
-// Leer tarjeta
 app.get("/leer-tarjeta", async (req, res) => {
   const id = req.query.id;
   if (!id) return res.status(400).json({ error: "ID no proporcionado" });
@@ -79,7 +60,6 @@ app.get("/leer-tarjeta", async (req, res) => {
         }
       }
     );
-
     const result = await response.json();
     res.status(response.status).json(result);
   } catch (err) {
@@ -89,7 +69,5 @@ app.get("/leer-tarjeta", async (req, res) => {
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`✅ Proxy activo en puerto ${PORT}`);
-});
+app.listen(PORT, () => console.log(`✅ Proxy escuchando en puerto ${PORT}`));
 
