@@ -11,18 +11,16 @@ const upload = multer();
 
 app.post("/crear-tarjeta", upload.any(), async (req, res) => {
   try {
-    // 🔍 Ver qué recibe el proxy desde el formulario
     console.log("📝 Campos recibidos:", req.body);
     console.log("📎 Archivos recibidos:", req.files);
 
     const form = new FormData();
 
-    // Adjuntar campos de texto al nuevo form
-    for (const field in req.body) {
-      form.append(field, req.body[field]);
-    }
+    // ✅ Corrección: convertir valores explícitamente a string
+    Object.entries(req.body).forEach(([key, value]) => {
+      form.append(key, value.toString());
+    });
 
-    // Adjuntar archivos al nuevo form
     for (const file of req.files) {
       form.append(file.fieldname, file.buffer, {
         filename: file.originalname,
@@ -30,7 +28,6 @@ app.post("/crear-tarjeta", upload.any(), async (req, res) => {
       });
     }
 
-    // Enviar a NocoDB
     const response = await fetch(
       "https://idgonow.up.railway.app/api/v1/db/data/v1/pg9x94vtxgric6p/tarjetas_presentacion",
       {
@@ -75,4 +72,3 @@ app.get("/leer-tarjeta", async (req, res) => {
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`✅ Proxy escuchando en puerto ${PORT}`));
-
