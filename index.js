@@ -8,7 +8,6 @@ const app = express();
 const upload = multer();
 
 app.use(cors());
-app.use(express.json());
 
 // Crear tarjeta
 app.post("/crear-tarjeta", upload.fields([
@@ -18,10 +17,20 @@ app.post("/crear-tarjeta", upload.fields([
   try {
     const form = new FormData();
 
-    Object.entries(req.body).forEach(([key, value]) => {
-      form.append(key, value);
+    // Agrega campos de texto manualmente
+    const camposTexto = [
+      "tipo_ficha", "Nombre", "Apellido", "Empresa", "Cargo",
+      "Telefono", "Email", "Url_linkedin", "url_web",
+      "Facebook", "Instagram"
+    ];
+
+    camposTexto.forEach(key => {
+      if (req.body[key]) {
+        form.append(key, req.body[key]);
+      }
     });
 
+    // Adjunta archivos si existen
     if (req.files?.Foto_perfil?.[0]) {
       form.append("Foto_perfil", req.files.Foto_perfil[0].buffer, {
         filename: req.files.Foto_perfil[0].originalname,
@@ -42,9 +51,9 @@ app.post("/crear-tarjeta", upload.fields([
         method: "POST",
         headers: {
           "xc-token": "HzyX5A2ycuqlDhV2uyiQ-12UhN_DM0uO4Bfxe7hy",
-          ...form.getHeaders(),
+          ...form.getHeaders()
         },
-        body: form,
+        body: form
       }
     );
 
@@ -83,3 +92,4 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`✅ Proxy activo en puerto ${PORT}`);
 });
+
